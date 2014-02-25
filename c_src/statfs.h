@@ -1,0 +1,34 @@
+/*
+  Erlang port driver for statfs
+
+  Copyright 2014 Jean Parpaillon
+
+  Author: Jean Parpaillon <jean.parpaillon@free.fr>
+*/
+
+#ifndef __STATFS_DRV__
+#define __STATFS_DRV__
+
+#include "erl_nif.h"
+
+#define MAXBUFLEN 1024
+
+typedef struct {
+  ERL_NIF_TERM    atom_ok;
+  ERL_NIF_TERM    atom_error;
+  ERL_NIF_TERM    atom_statfs;
+  ERL_NIF_TERM    atom_rdonly;
+  ERL_NIF_TERM    atom_nosuid;
+} statfs_st;
+
+ERL_NIF_TERM make_atom(ErlNifEnv* env, const char* name);
+ERL_NIF_TERM make_ok(statfs_st* st, ErlNifEnv* env, ERL_NIF_TERM data);
+ERL_NIF_TERM make_error(statfs_st* st, ErlNifEnv* env, const char* error);
+ERL_NIF_TERM make_f_flag(statfs_st* st, ErlNifEnv* env, const struct statvfs* stat);
+
+const char* resolve_errno(int err);
+
+
+ERL_NIF_TERM nif_statfs(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
+
+#endif
