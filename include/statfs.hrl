@@ -18,3 +18,11 @@
 		 flag         :: [statfs_flag()],
 		 namemax      :: integer()}).
 -type statfs() :: #statfs{}.
+
+-record(mount, {fsname        :: string(),
+		dir           :: string(),
+		type          :: string(),
+		opts          :: string(),
+		freq          :: integer(),
+		passno        :: integer()}).
+-type mount() :: #mount{}.

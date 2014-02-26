@@ -47,6 +47,24 @@ resolve_errno(int err)
 }
 
 ERL_NIF_TERM
+make_statfs(statfs_st* st, ErlNifEnv* env, const struct statvfs* stat)
+{
+  return make_ok(st, env,
+		 enif_make_tuple(env, 12, st->atom_statfs,
+				 enif_make_ulong(env, (unsigned long)stat->f_bsize),
+				 enif_make_ulong(env, (unsigned long)stat->f_frsize),
+				 enif_make_ulong(env, (unsigned long)stat->f_blocks),
+				 enif_make_ulong(env, (unsigned long)stat->f_bfree),
+				 enif_make_ulong(env, (unsigned long)stat->f_bavail),
+				 enif_make_ulong(env, (unsigned long)stat->f_files),
+				 enif_make_ulong(env, (unsigned long)stat->f_ffree),
+				 enif_make_ulong(env, (unsigned long)stat->f_favail),
+				 enif_make_ulong(env, (unsigned long)stat->f_fsid),
+				 make_f_flag(st, env, stat),
+				 enif_make_ulong(env, (unsigned long)stat->f_namemax)));
+}
+
+ERL_NIF_TERM
 make_f_flag(statfs_st* st, ErlNifEnv* env, const struct statvfs* stat)
 {
   ERL_NIF_TERM ret = enif_make_list(env, 0);
@@ -59,4 +77,16 @@ make_f_flag(statfs_st* st, ErlNifEnv* env, const struct statvfs* stat)
   }
 
   return ret;
+}
+
+ERL_NIF_TERM
+make_mount(statfs_st* st, ErlNifEnv* env, const struct mntent* ent)
+{
+  return enif_make_tuple(env, 7, st->atom_mount,
+			 enif_make_string(env, ent->mnt_fsname, ERL_NIF_LATIN1),
+			 enif_make_string(env, ent->mnt_dir, ERL_NIF_LATIN1),
+			 enif_make_string(env, ent->mnt_type, ERL_NIF_LATIN1),
+			 enif_make_string(env, ent->mnt_opts, ERL_NIF_LATIN1),
+			 enif_make_int(env, ent->mnt_freq),
+			 enif_make_int(env, ent->mnt_passno));
 }

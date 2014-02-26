@@ -5,7 +5,9 @@
 
   Author: Jean Parpaillon <jean.parpaillon@free.fr>
 */
+#include <stdio.h>
 #include <sys/statvfs.h>
+#include <mntent.h>
 #include <errno.h>
 
 #include "statfs.h"
@@ -18,32 +20,57 @@ nif_statfs(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
   char path[MAXBUFLEN] = {0};
   struct statvfs* stat = enif_alloc(sizeof(struct statvfs));
 
+  if (argc != 1) {
+    ret = enif_make_badarg(env);
+    goto out;
+  }
+
   if (enif_get_string(env, argv[0], path, MAXBUFLEN, ERL_NIF_LATIN1) < 1) {
     ret = enif_make_badarg(env);
     goto out;
   }
   
   if (statvfs(path, stat)) {
-    //ret = make_error(st, env, resolve_errno(errno));
-    ret = make_error(st, env, "error");
+    ret = make_error(st, env, resolve_errno(errno));
     goto out;
   }
 
-  ret = enif_make_tuple(env, 12, st->atom_statfs,
-			enif_make_ulong(env, (unsigned long)stat->f_bsize),
-			enif_make_ulong(env, (unsigned long)stat->f_frsize),
-			enif_make_ulong(env, (unsigned long)stat->f_blocks),
-			enif_make_ulong(env, (unsigned long)stat->f_bfree),
-			enif_make_ulong(env, (unsigned long)stat->f_bavail),
-			enif_make_ulong(env, (unsigned long)stat->f_files),
-			enif_make_ulong(env, (unsigned long)stat->f_ffree),
-			enif_make_ulong(env, (unsigned long)stat->f_favail),
-			enif_make_ulong(env, (unsigned long)stat->f_fsid),
-			make_f_flag(st, env, stat),
-			enif_make_ulong(env, (unsigned long)stat->f_namemax));
-
+  ret = make_statfs(st, env, stat);
+  
  out:
   enif_free(stat);
+  return ret;
+}
+
+ERL_NIF_TERM
+nif_mounts(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+{
+  statfs_st* st = (statfs_st*)enif_priv_data(env);
+  ERL_NIF_TERM ret;
+  FILE* file;
+  struct mntent* ent = enif_alloc(sizeof(struct mntent));
+
+  if (argc) {
+    ret = enif_make_badarg(env);
+    goto out;
+  }
+
+  file = setmntent("/proc/mounts", "r");
+  if (file == NULL) {
+    ret = make_error(st, env, resolve_errno(errno));
+    goto out;
+  }
+
+  ret = enif_make_list(env, 0);
+  while (NULL != (ent = getmntent(file))) {
+    ret = enif_make_list_cell(env, make_mount(st, env, ent), ret);
+  }
+  endmntent(file);
+
+  ret = make_ok(st, env, ret);
+
+ out:
+  enif_free(ent);
   return ret;
 }
 
@@ -63,6 +90,7 @@ load(ErlNifEnv* env, void** priv, ERL_NIF_TERM info)
     st->atom_statfs = make_atom(env, "statfs");
     st->atom_rdonly = make_atom(env, "rdonly");
     st->atom_nosuid = make_atom(env, "nosuid");
+    st->atom_mount = make_atom(env, "mount");
 
     *priv = (void*) st;
 
@@ -90,7 +118,8 @@ unload(ErlNifEnv* env, void* priv)
 
 static ErlNifFunc funcs[] =
 {
-    {"statfs", 1, nif_statfs}
+  {"statfs", 1, nif_statfs},
+  {"mounts", 0, nif_mounts}
 };
 
 ERL_NIF_INIT(statfs, funcs, &load, &reload, &upgrade, &unload);
