@@ -6,17 +6,17 @@
 %%% Created : 25 Feb 2014 by Jean Parpaillon <jean.parpaillon@free.fr>
 -type statfs_flag() :: rdonly | nosuid.
 
--record(statfs, {bsize        :: integer(),
-		 frsize       :: integer(),
-		 blocks       :: integer(),
-		 bfree        :: integer(),
-		 bavail       :: integer(),
-		 files        :: integer(),
-		 ffree        :: integer(),
-		 favail       :: integer(),
-		 fsid         :: integer(),
-		 flag         :: [statfs_flag()],
-		 namemax      :: integer()}).
+-record(statfs, {bsize      = 0  :: integer(),
+		 frsize     = 0  :: integer(),
+		 blocks     = 0  :: integer(),
+		 bfree      = 0  :: integer(),
+		 bavail     = 0  :: integer(),
+		 files      = 0  :: integer(),
+		 ffree      = 0  :: integer(),
+		 favail     = 0  :: integer(),
+		 fsid       = 0  :: integer(),
+		 flag       = [] :: [statfs_flag()],
+		 namemax    = 0  :: integer()}).
 -type statfs() :: #statfs{}.
 
 -record(mount, {fsname        :: string(),

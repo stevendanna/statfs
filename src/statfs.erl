@@ -45,7 +45,13 @@ free(Path) ->
 free_pc(Path) ->
     case statfs(Path) of
 	{ok, #statfs{frsize=Frsize, blocks=Blocks, bsize=Bsize, bfree=Bfree}} ->
-	    {ok, (Bsize*Bfree)/(Blocks*Frsize)};
+	    Free = (Bsize*Bfree),
+	    case (Blocks*Frsize) of
+		0 ->
+		    {ok, 0.0};
+		Total ->
+		    {ok, Free / Total}
+	    end;
 	{error, Err} ->
 	    {error, Err}
     end.
@@ -86,14 +92,14 @@ df_pretty() ->
 %%%
 -spec statfs(Path :: string()) -> {ok, statfs()} | {error, term()}.
 statfs(_Path) ->
-    ?NOT_LOADED.
+    {ok, #statfs{}}.
 
 %%%
 %%% mounts NIF
 %%%
 -spec mounts() -> {ok, [mount()]} | {error, term()}.
 mounts() ->
-    ?NOT_LOADED.
+    {ok, []}.
 
 %%%===================================================================
 %%% Internal functions
@@ -109,5 +115,5 @@ init() ->
     end,
     erlang:load_nif(filename:join(PrivDir, "statfs"), 0).
 
-not_loaded(Line) ->
-    erlang:nif_error({not_loaded, [{module, ?MODULE}, {line, Line}]}).
+%not_loaded(Line) ->
+%    erlang:nif_error({not_loaded, [{module, ?MODULE}, {line, Line}]}).
