@@ -2,4 +2,6 @@
 *.beam
 *.so
 *.o
+*.d
+/.rebar
 /ebin

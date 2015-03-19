@@ -17,7 +17,7 @@
 %%% 
 -module(statfs).
 
--include_lib("statfs/include/statfs.hrl").
+-include("statfs.hrl").
 
 %% API
 -export([statfs/1, free/1, free_pc/1]).
