@@ -5,3 +5,5 @@
 *.d
 /.rebar
 /ebin
+/_build
+/rebar.lock
