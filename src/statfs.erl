@@ -1,20 +1,20 @@
 %% @author Jean Parpaillon <jean.parpaillon@free.fr>
 %% @copyright 2014 Jean Parpaillon.
-%%% 
+%%%
 %%% This file is provided to you under the Apache License,
 %%% Version 2.0 (the "License"); you may not use this file
 %%% except in compliance with the License.  You may obtain
 %%% a copy of the License at
-%%% 
+%%%
 %%%   http://www.apache.org/licenses/LICENSE-2.0
-%%% 
+%%%
 %%% Unless required by applicable law or agreed to in writing,
 %%% software distributed under the License is distributed on an
 %%% "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 %%% KIND, either express or implied.  See the License for the
 %%% specific language governing permissions and limitations
 %%% under the License.
-%%% 
+%%%
 -module(statfs).
 
 -include("statfs.hrl").
@@ -32,8 +32,8 @@
 -spec free(Path :: string()) -> {ok, integer()} | {error, term()}.
 free(Path) ->
     case statfs(Path) of
-	{ok, #statfs{bsize=Bsize, bfree=Bfree}} ->
-	    {ok, Bsize*Bfree};
+	{ok, #statfs{frsize=Frsize, bfree=Bfree}} ->
+	    {ok, Frsize*Bfree};
 	{error, Err} ->
 	    {error, Err}
     end.
@@ -44,8 +44,8 @@ free(Path) ->
 -spec free_pc(Path :: string()) -> {ok, float()} | {error, term()}.
 free_pc(Path) ->
     case statfs(Path) of
-	{ok, #statfs{frsize=Frsize, blocks=Blocks, bsize=Bsize, bfree=Bfree}} ->
-	    Free = (Bsize*Bfree),
+	{ok, #statfs{frsize=Frsize, blocks=Blocks, bfree=Bfree}} ->
+	    Free = (Frsize*Bfree),
 	    case (Blocks*Frsize) of
 		0 ->
 		    {ok, 0.0};
@@ -75,11 +75,11 @@ df() ->
 %%% Return list of pretty mounts figures (sizes in kB)
 %%%
 df_pretty() ->
-    lists:map(fun ({#mount{fsname=Fsname, dir=Dir, type=Type}, 
-		    #statfs{bsize=Bsize, blocks=Blocks, bfree=Bfree}}) ->
-		      Total = round(Bsize * Blocks / 1024),
-		      Used = round(Bsize * (Blocks - Bfree) / 1024),
-		      Free = Bsize * Bfree,
+    lists:map(fun ({#mount{fsname=Fsname, dir=Dir, type=Type},
+		    #statfs{frsize=Frsize, blocks=Blocks, bfree=Bfree}}) ->
+		      Total = round(Frsize * Blocks / 1024),
+		      Used = round(Frsize * (Blocks - Bfree) / 1024),
+		      Free = Frsize * Bfree,
 		      Pc = case Total of
 			       0 -> 0.0;
 			       _ -> Used / Total
