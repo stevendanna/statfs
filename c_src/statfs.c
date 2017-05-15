@@ -6,10 +6,7 @@
   Author: Jean Parpaillon <jean.parpaillon@free.fr>
 */
 #include <stdio.h>
-#include <sys/statvfs.h>
-#include <mntent.h>
 #include <errno.h>
-
 #include "statfs.h"
 
 ERL_NIF_TERM
@@ -29,19 +26,45 @@ nif_statfs(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
     ret = enif_make_badarg(env);
     goto out;
   }
-  
+
   if (statvfs(path, stat)) {
     ret = make_error(st, env, resolve_errno(errno));
     goto out;
   }
 
   ret = make_statfs(st, env, stat);
-  
+
  out:
   enif_free(stat);
   return ret;
 }
 
+#ifdef __MACH__
+ERL_NIF_TERM
+nif_mounts(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+{
+  statfs_st* st = (statfs_st*)enif_priv_data(env);
+  ERL_NIF_TERM ret;
+  struct statfs *mntbufp;
+  int count = 0;
+
+  if (argc) {
+    return(enif_make_badarg(env));
+  }
+
+  count = getmntinfo(&mntbufp, 0);
+  if (!count) {
+    return(make_error(st, env, resolve_errno(errno)));
+  }
+
+  ret = enif_make_list(env, 0);
+  for(int i = 0; i < count; i++) {
+    ret = enif_make_list_cell(env, make_mount(st, env, &mntbufp[i]), ret);
+  }
+
+  return(make_ok(st, env, ret));
+}
+#else
 ERL_NIF_TERM
 nif_mounts(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
@@ -73,6 +96,7 @@ nif_mounts(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
   enif_free(ent);
   return ret;
 }
+#endif
 
 /*
  * NIF callbacks

@@ -79,6 +79,21 @@ make_f_flag(statfs_st* st, ErlNifEnv* env, const struct statvfs* stat)
   return ret;
 }
 
+
+#ifdef __MACH__
+ERL_NIF_TERM
+make_mount(statfs_st* st, ErlNifEnv* env, const struct statfs* ent)
+{
+  return enif_make_tuple(env, 7, st->atom_mount,
+                         enif_make_string(env, ent->f_mntfromname, ERL_NIF_LATIN1),
+                         enif_make_string(env, ent->f_mntonname, ERL_NIF_LATIN1),
+                         enif_make_string(env, ent->f_fstypename, ERL_NIF_LATIN1),
+                         // We don't support the following fields on OS X
+                         enif_make_string(env, "", ERL_NIF_LATIN1),
+                         enif_make_int(env, 0),
+                         enif_make_int(env, 0));
+}
+#else
 ERL_NIF_TERM
 make_mount(statfs_st* st, ErlNifEnv* env, const struct mntent* ent)
 {
@@ -90,3 +105,4 @@ make_mount(statfs_st* st, ErlNifEnv* env, const struct mntent* ent)
 			 enif_make_int(env, ent->mnt_freq),
 			 enif_make_int(env, ent->mnt_passno));
 }
+#endif
