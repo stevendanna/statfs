@@ -92,14 +92,14 @@ df_pretty() ->
 %%%
 -spec statfs(Path :: string()) -> {ok, statfs()} | {error, term()}.
 statfs(_Path) ->
-    {ok, #statfs{}}.
+    erlang:nif_error(nif_library_not_loaded).
 
 %%%
 %%% mounts NIF
 %%%
 -spec mounts() -> {ok, [mount()]} | {error, term()}.
 mounts() ->
-    {ok, []}.
+    erlang:nif_error(nif_library_not_loaded).
 
 %%%===================================================================
 %%% Internal functions
